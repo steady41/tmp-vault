@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vault — share a secret once</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="card">
+    <h1>Vault</h1>
+    <p class="subtitle">Zero-knowledge, single-use secret sharing. The server never sees your plaintext or the key.</p>
+
+    <label for="secret">Secret</label>
+    <textarea id="secret" rows="6" placeholder="Paste a password, token, or message here..." autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
+
+    <div class="row">
+      <div>
+        <label for="ttl">Expires in</label>
+        <select id="ttl">
+          <option value="3600">1 hour</option>
+          <option value="86400" selected>24 hours</option>
+          <option value="604800">7 days</option>
+        </select>
+      </div>
+      <div>
+        <label for="max_views">Max views</label>
+        <input id="max_views" type="number" min="1" max="100" value="1">
+      </div>
+    </div>
+
+    <button id="create">Create link</button>
+
+    <p id="status" hidden></p>
+
+    <div id="result" hidden>
+      <p>Send this link. The key is stored in the <code>#</code> fragment and never reaches the server.</p>
+      <div class="link-wrap">
+        <input id="link" type="text" readonly>
+        <button id="copy">Copy</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="/static/crypto.js"></script>
+  <script src="/static/create.js"></script>
+</body>
+</html>

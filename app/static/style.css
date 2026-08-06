@@ -1,0 +1,82 @@
+:root {
+  --bg: #101418;
+  --panel: #1a2027;
+  --border: #2a333d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --accent: #2f81f7;
+  --danger: #f85149;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.card {
+  width: min(560px, 92vw);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+}
+
+h1 { margin: 0 0 4px; font-size: 1.6rem; }
+.subtitle { margin: 0 0 20px; color: var(--muted); font-size: 0.95rem; }
+
+label { display: block; margin: 14px 0 6px; font-size: 0.85rem; color: var(--muted); }
+textarea, input[type="text"], select, input[type="number"] {
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 1rem;
+}
+textarea { resize: vertical; font-family: ui-monospace, monospace; }
+
+.row { display: flex; gap: 14px; }
+.row > div { flex: 1; }
+
+button {
+  margin-top: 18px;
+  width: 100%;
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 11px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+#status { color: var(--danger); margin-top: 14px; font-size: 0.9rem; }
+
+#result { margin-top: 18px; }
+#result p { color: var(--muted); font-size: 0.85rem; }
+#result .link-wrap { display: flex; gap: 8px; }
+#result .link-wrap input { flex: 1; font-family: ui-monospace, monospace; font-size: 0.85rem; }
+#result .link-wrap button { width: auto; margin: 0; padding: 10px 14px; }
+
+code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 0.9em; }
+
+#secret-box {
+  margin-top: 6px;
+  padding: 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, monospace;
+}
