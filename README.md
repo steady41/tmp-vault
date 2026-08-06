@@ -14,17 +14,17 @@ plaintext and the encryption key never leave the browser.
    it.
 
 2. **Ephemeral storage.** Redis stores the ciphertext under `secret:{id}` with a
-   TTL (Redis expires it automatically). Reads use an atomic Lua script that
-   decrements the view counter and `DEL`s the key at zero — a secret cannot be
-   read twice, even under concurrency.
+   TTL (Redis expires it automatically). Reads use an atomic
+   `WATCH`/`MULTI`/`EXEC` transaction that decrements the view counter and
+   `DEL`s the key at zero — a secret cannot be read twice, even under
+   concurrency.
 
 3. **Defense-in-depth at rest.** With `VAULT_FERNET_KEY` set, the stored blob is
    additionally wrapped with Fernet. Even a full Redis dump is useless without
    both the app key and the per-secret client key.
 
 4. **Hardening.** `no-store` caching, strict CSP/HSTS/nosniff/referrer headers,
-   request-size limits, per-IP rate limiting, hidden OpenAPI docs, non-root
-   container.
+   request-size limits, per-IP rate limiting, hidden OpenAPI docs.
 
 ## Layout
 
@@ -33,14 +33,11 @@ app/
   main.py        FastAPI app, routes, security middleware
   config.py      Settings (VAULT_* env vars)
   crypto.py      Fernet wrap/unwrap of stored blobs
-  storage.py     Redis create + atomic read (Lua)
+  storage.py     Redis create + atomic read (WATCH/EXEC)
   ratelimit.py   per-IP create rate limiting
   base64util.py  base64url helpers
   static/        frontend (index, reveal, client-side AES-GCM)
 tests/           pytest suite (runs against fakeredis)
-nginx/           reference reverse-proxy config
-Dockerfile       multi-stage, python:3.11-slim, non-root UID 10001
-docker-compose.yml  redis + app (+ nginx behind the proxy profile)
 ```
 
 ## API
@@ -72,18 +69,6 @@ cp .env.example .env
 uvicorn app.main:app --reload          # needs a local Redis on 6379
 ```
 
-## Docker
-
-```sh
-cp .env.example .env
-docker compose up --build -d           # app on :8000
-docker compose --profile proxy up -d   # + nginx TLS on :443
-```
-
-For the proxy profile, drop `fullchain.pem`/`privkey.pem` into `./nginx/certs/`
-and adjust `server_name` in `nginx/nginx.conf` (a self-signed one-liner is in
-the config header).
-
 ## Configuration
 
 All settings are `VAULT_`-prefixed env vars (see `app/config.py` and
@@ -98,7 +83,7 @@ All settings are `VAULT_`-prefixed env vars (see `app/config.py` and
 | `VAULT_MAX_TTL_SECONDS`               | `604800`         | Upper TTL clamp                          |
 | `VAULT_CREATE_RATE_LIMIT_PER_MINUTE`  | `10`             | Create requests / IP / minute            |
 | `VAULT_MAX_REQUEST_BYTES`             | `100000`         | Reject larger request bodies (413)       |
-| `VAULT_TRUST_PROXY`                   | `false`          | Honor `X-Forwarded-For` (set true behind nginx) |
+| `VAULT_TRUST_PROXY`                   | `false`          | Honor `X-Forwarded-For` for rate limiting |
 
 Generate a Fernet key:
 

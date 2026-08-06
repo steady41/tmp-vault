@@ -7,5 +7,3 @@ venv/
 *.egg-info/
 dist/
 build/
-nginx/certs/*.pem
-nginx/certs/*.key
