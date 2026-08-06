@@ -1,4 +1,4 @@
-# Vault — zero-knowledge, single-use secret sharing
+# Vault | zero-knowledge, single-use secret sharing
 
 Share a password, token, or short message through a link that self-destructs
 after the first read (or after a TTL). The server is **zero-knowledge**: the
