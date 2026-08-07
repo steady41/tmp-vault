@@ -19,7 +19,7 @@ pycparser==3.0
 pydantic==2.13.4
 pydantic-settings==2.14.2
 pydantic_core==2.47.0
-pytest==8.3.5
+pytest==9.1.1
 pytest-asyncio==1.4.0
 python-dotenv==1.2.2
 PyYAML==6.0.3
