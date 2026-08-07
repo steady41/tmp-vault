@@ -4,6 +4,17 @@
   const statusEl = document.getElementById("status");
   const secretBox = document.getElementById("secret-box");
   const contentEl = document.getElementById("content");
+  const copyBtn = document.getElementById("copy");
+
+  copyBtn.addEventListener("click", function () {
+    navigator.clipboard
+      .writeText(contentEl.textContent)
+      .then(() => {
+        copyBtn.textContent = "Copied";
+        setTimeout(() => (copyBtn.textContent = "Copy"), 1500);
+      })
+      .catch(() => {});
+  });
 
   async function run() {
     if (!id) {
