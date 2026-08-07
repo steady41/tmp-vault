@@ -44,4 +44,4 @@ async def read_secret(r: Redis, key: str) -> bytes | None:
             except redis_exceptions.WatchError:
                 continue
             finally:
-                pipe.reset()
+                await pipe.reset()

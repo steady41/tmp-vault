@@ -4,4 +4,14 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
+    # Only track the direct deps listed in requirements.txt /
+    # requirements-dev.txt, not the whole transitive tree.
+    allow:
+      - dependency-type: "direct"
+    # Bundle minor/patch bumps into one PR to reduce noise.
+    groups:
+      minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
