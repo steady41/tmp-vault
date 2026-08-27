@@ -154,8 +154,11 @@ async def test_security_headers_present(client):
     assert resp.status_code == 200
     assert resp.headers["referrer-policy"] == "no-referrer"
     assert "frame-ancestors 'none'" in resp.headers["content-security-policy"]
-    assert resp.headers["cache-control"] == "no-store"
+    assert "no-store" in resp.headers["cache-control"]
+    assert "no-cache" in resp.headers["cache-control"]
     assert "Strict-Transport-Security" in resp.headers
+    assert resp.headers["x-content-type-options"] == "nosniff"
+    assert resp.headers["cross-origin-opener-policy"] == "same-origin"
 
 
 @pytest.mark.asyncio

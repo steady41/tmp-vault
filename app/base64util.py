@@ -1,9 +1,18 @@
+"""Unpadded base64url helpers — the wire format for ciphertext blobs."""
+
+from __future__ import annotations
+
 import base64
 
 
 def decode_b64url(value: str) -> bytes:
-    """Decode a base64url string (padding optional) into raw bytes."""
+    """Decode an unpadded base64url string into raw bytes.
+
+    Whitespace is stripped; ``-``/``_`` are treated as ``+``/``/``.
+    Raises ``binascii.Error`` / ``ValueError`` on malformed input.
+    """
     s = value.strip().replace("-", "+").replace("_", "/")
+    # Add required ``=`` padding before stdlib validation.
     s += "=" * (-len(s) % 4)
     return base64.b64decode(s, validate=True)
 

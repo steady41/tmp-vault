@@ -1,3 +1,7 @@
+"""Per-IP fixed-window rate limiting for secret creation."""
+
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 from fastapi import HTTPException, Request
@@ -5,14 +9,17 @@ from fastapi import HTTPException, Request
 from .config import Settings
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class RateLimitResult:
     limit: int
     remaining: int
 
 
 async def enforce_create_rate_limit(request: Request) -> RateLimitResult:
-    """Fixed one-minute window per client IP, tracked in Redis."""
+    """Enforce a fixed 60-second window per client IP, tracked in Redis.
+
+    Raises ``HTTPException(429)`` when the limit is exceeded.
+    """
     settings: Settings = request.app.state.settings
     redis = request.app.state.redis
     ip = _client_ip(request, settings)
@@ -29,8 +36,20 @@ async def enforce_create_rate_limit(request: Request) -> RateLimitResult:
 
 
 def _client_ip(request: Request, settings: Settings) -> str:
+    """Resolve the client IP, optionally trusting ``X-Forwarded-For``.
+
+    When ``VAULT_TRUST_PROXY`` is true the left-most entry of
+    ``X-Forwarded-For`` is trusted — only enable this behind a trusted
+    reverse proxy that strips external values.
+    """
     if settings.trust_proxy:
         forwarded = request.headers.get("x-forwarded-for")
         if forwarded:
-            return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
+            # XFF may be "client, proxy1, proxy2"
+            first = forwarded.split(",")[0].strip()
+            if first:
+                return first
+    # Fallback to the direct TCP peer.
+    if request.client and request.client.host:
+        return request.client.host
+    return "unknown"

@@ -1,3 +1,7 @@
+"""Defense-in-depth wrapping of stored blobs with an optional app-level Fernet key."""
+
+from __future__ import annotations
+
 from cryptography.fernet import Fernet, InvalidToken
 
 _PLAIN = b"v0|"
@@ -7,9 +11,9 @@ _ENCRYPTED = b"v1|"
 def wrap_blob(blob: bytes, fernet: Fernet | None) -> bytes:
     """Optionally encrypt the stored blob with the app-level Fernet key.
 
-    The blob is already ciphertext from the client's perspective, so this is
-    defense-in-depth: even a Redis dump is useless without the app key and the
-    client key that lived only in the URL fragment.
+    The blob is already AES-GCM ciphertext from the browser; this layer
+    ensures a Redis dump is useless without both the app key and the
+    per-secret key that lived only in the URL fragment.
     """
     if fernet is None:
         return _PLAIN + blob
@@ -17,7 +21,9 @@ def wrap_blob(blob: bytes, fernet: Fernet | None) -> bytes:
 
 
 def unwrap_blob(blob: bytes, fernet: Fernet | None) -> bytes:
-    """Reverse wrap_blob; raises ValueError on version or key mismatches."""
+    """Reverse :func:`wrap_blob`; raises ``ValueError`` on version/key mismatches."""
+    if len(blob) < 3:
+        raise ValueError("stored blob is truncated")
     version, payload = blob[:3], blob[3:]
     if version == _PLAIN:
         return payload

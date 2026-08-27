@@ -3,44 +3,115 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Vault — share a secret once</title>
+  <meta name="description" content="Share a secret that self-destructs after one view. Zero-knowledge, end-to-end encrypted in your browser.">
+  <meta name="color-scheme" content="dark">
+  <title>Vault — zero-knowledge secret sharing</title>
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%233b82f6'/><path d='M16 10a4 4 0 0 0-4 4v2H10a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-2v-2a4 4 0 0 0-4-4zm-2 4a2 2 0 0 1 4 0v2h-4v-2z' fill='white'/></svg>">
 </head>
 <body>
-  <main class="card">
-    <h1>Vault</h1>
-    <p class="subtitle">Zero-knowledge, single-use secret sharing. The server never sees your plaintext or the key.</p>
-
-    <label for="secret">Secret</label>
-    <textarea id="secret" rows="6" placeholder="Paste a password, token, or message here..." autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
-
-    <div class="row">
-      <div>
-        <label for="ttl">Expires in</label>
-        <select id="ttl">
-          <option value="3600">1 hour</option>
-          <option value="86400" selected>24 hours</option>
-          <option value="604800">7 days</option>
-        </select>
-      </div>
-      <div>
-        <label for="max_views">Max views</label>
-        <input id="max_views" type="number" min="1" max="100" value="1">
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="/">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 2.5A4.5 4.5 0 0 0 7.5 7v2H6a2.5 2.5 0 0 0-2.5 2.5v7A2.5 2.5 0 0 0 6 21h12a2.5 2.5 0 0 0 2.5-2.5v-7A2.5 2.5 0 0 0 18 9h-1.5V7A4.5 4.5 0 0 0 12 2.5zm-2.5 4.5A2.5 2.5 0 0 1 12 4.5a2.5 2.5 0 0 1 2.5 2.5v2h-5V7z"/></svg>
+        </span>
+        <span>
+          <div class="brand-name">VAULT</div>
+          <div class="brand-sub">Zero-knowledge</div>
+        </span>
+      </a>
+      <div class="nav-links">
+        <span class="badge"><span class="badge-dot"></span> End-to-end encrypted</span>
+        <a href="https://github.com/steady41/tmp-vault" target="_blank" rel="noreferrer">GitHub</a>
       </div>
     </div>
+  </nav>
 
-    <button id="create">Create link</button>
-
-    <p id="status" hidden></p>
-
-    <div id="result" hidden>
-      <p>Send this link. The key is stored in the <code>#</code> fragment and never reaches the server.</p>
-      <div class="link-wrap">
-        <input id="link" type="text" readonly>
-        <button id="copy">Copy</button>
+  <div class="wrap">
+    <header class="hero">
+      <h1>Share a secret that<br>burns after reading</h1>
+      <p>Your plaintext never leaves the browser. A 256-bit key is generated client-side,
+        the ciphertext is stored briefly, and the key travels only in the URL fragment.</p>
+      <div class="hero-stats">
+        <span class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> AES-GCM 256</span>
+        <span class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.5A4.5 4.5 0 0 0 7.5 7v2H6a2.5 2.5 0 0 0-2.5 2.5v7A2.5 2.5 0 0 0 6 21h12a2.5 2.5 0 0 0 2.5-2.5v-7A2.5 2.5 0 0 0 18 9h-1.5V7A4.5 4.5 0 0 0 12 2.5z"/></svg> Zero-knowledge</span>
+        <span class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l3-3 3 3 4-4 4 4 3-3"/><path d="M3 12h18"/></svg> Single-use link</span>
       </div>
-    </div>
-  </main>
+    </header>
+
+    <main class="card" aria-labelledby="create-title">
+      <h2 id="create-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        Create a secret link
+      </h2>
+      <p class="sub">The server stores only the ciphertext. The key stays in your browser until you share the link.</p>
+
+      <div class="field">
+        <label for="secret">Secret <span class="counter" id="counter">0 / 8000</span></label>
+        <textarea id="secret" rows="6" maxlength="8000" placeholder="Paste a password, API token, private note… (max ~8 kB)" autocomplete="off" autocorrect="off" spellcheck="false" aria-describedby="counter"></textarea>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="ttl">Expires in</label>
+          <select id="ttl" aria-label="Time to live">
+            <option value="3600">1 hour</option>
+            <option value="86400" selected>24 hours</option>
+            <option value="259200">3 days</option>
+            <option value="604800">7 days</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="max_views">Max views</label>
+          <input id="max_views" type="number" min="1" max="100" value="1" aria-label="Maximum views">
+        </div>
+      </div>
+
+      <button id="create" class="btn" type="button">
+        <span class="spinner" aria-hidden="true"></span>
+        <span class="btn-label">Create burn-after-reading link</span>
+      </button>
+
+      <div id="status" class="hidden" role="alert"></div>
+
+      <div id="result" class="result hidden" aria-live="polite">
+        <div class="result-title">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+          Link ready — share it now
+        </div>
+        <p>The <code>#fragment</code> holds the key and is never sent to the server. Anyone with the link can read the secret once.</p>
+        <div class="link-wrap">
+          <input id="link" type="text" readonly autocomplete="off" spellcheck="false" aria-label="Secret link">
+          <button id="copy" class="btn btn-ghost" type="button" style="width:auto; margin:0; padding:10px 16px;">Copy</button>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-card"><strong id="meta-ttl">24h</strong><span>Expires</span></div>
+          <div class="meta-card"><strong id="meta-views">1 view</strong><span>Limit</span></div>
+          <div class="meta-card"><strong>🔒 Encrypted</strong><span>In browser</span></div>
+        </div>
+      </div>
+    </main>
+
+    <section class="features" aria-label="Features">
+      <div class="feat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        <h3>Client-side AES-GCM</h3><p>256-bit key generated in your browser. Only <code>iv||ct</code> hits the network.</p>
+      </div>
+      <div class="feat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0z"/><path d="M12 8v4l3 2"/></svg>
+        <h3>Auto-burn</h3><p>Redis TTL + view counter. Atomic <code>WATCH</code> ensures a secret can never be read twice.</p>
+      </div>
+      <div class="feat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        <h3>Zero knowledge</h3><p>Key lives in the URL fragment — fragments are never sent in HTTP requests, not even to logs.</p>
+      </div>
+    </section>
+  </div>
+
+  <footer class="footer">
+    <p>Vault · <a href="https://github.com/steady41/tmp-vault">MIT</a> · No plaintext or key ever touches the server.</p>
+  </footer>
 
   <script src="/static/crypto.js"></script>
   <script src="/static/create.js"></script>
