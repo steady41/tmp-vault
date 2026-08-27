@@ -86,7 +86,7 @@ def build_app(
         if owned_redis:
             try:
                 await redis_conn.aclose()
-            except Exception:
+            except Exception:  # nosec B110 - best-effort cleanup on shutdown
                 pass
 
     app = FastAPI(

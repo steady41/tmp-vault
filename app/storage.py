@@ -82,5 +82,5 @@ async def read_secret(r: Redis, key: str) -> bytes | None:
             finally:
                 try:
                     await pipe.reset()
-                except Exception:
+                except Exception:  # nosec B110 - pipeline cleanup is best-effort
                     pass
